@@ -1,3 +1,4 @@
+import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
@@ -71,6 +72,13 @@ export async function buildApp() {
       docExpansion: "list",
       deepLinking: false,
     },
+  });
+
+  await app.register(rateLimit, {
+    global: false,
+    hook: "preHandler",
+    max: 20,
+    timeWindow: 10_000,
   });
 
   registerGlobalErrorHandlers(app);

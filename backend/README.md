@@ -109,7 +109,9 @@ Paginated response:
 - ORM: Drizzle + PostgreSQL.
 - User data is stored in `security.users`.
 - Shared audit columns (`created_at`, `updated_at`, `created_by`, `updated_by`) are centralized in `shared/db/audit-columns.ts`.
-- Read tracking is non-blocking and queued for analytics aggregation.
+- Read tracking is non-blocking and every successful article-detail read writes a `read_logs` row.
+- Analytics processing queue is in-memory (`Array` + `Set`) inside the API process.
+- No Redis/BullMQ/Kafka is used in the current implementation.
 - New articles are always created with status `Draft`.
 - Status transitions: `Draft -> Published`, `Draft -> Archived`, `Published -> Archived`, `Archived -> Published`.
 - Article content fields (`title`, `content`, `category`) are editable only while the article is in `Draft`.
@@ -117,7 +119,16 @@ Paginated response:
 
 ## Refresh Abuse Control
 
-Current implementation records every successful article read event. To prevent refresh abuse in production, add Redis rate-limits and an IP + user fingerprint throttle at the article-read endpoint.
+Current implementation records every successful article read event.
+
+What currently exists:
+
+- `GET /api/v1/articles/:id` uses route-level `@fastify/rate-limit` with in-memory storage (per user if authenticated, otherwise per IP, scoped by article id) with a short time window.
+- Analytics still uses an in-memory `Set` only for queue job deduplication (`articleId:date`).
+
+Recommendation:
+
+- Add a real distributed rate limiter in front of `GET /api/v1/articles/:id` (for example Redis-backed per-user and per-IP limits with short and long windows).
 
 ## Testing
 

@@ -369,3 +369,58 @@ test("GET /api/v1/articles/:id returns detail", async () => {
     }
   }
 });
+
+test("GET /api/v1/articles/:id returns 429 after burst reads", async () => {
+  const articleId = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
+  const restoreFns = [
+    stubMethod(
+      articleModel,
+      "findArticleById",
+      async () => ({
+        id: articleId,
+        title: "Published article",
+        content:
+          "This is a test article body that is intentionally longer than fifty characters.",
+        category: "Tech",
+        status: "Published" as const,
+        createdAt: new Date(),
+        authorId: "11111111-1111-1111-1111-111111111111",
+        createdBy: "11111111-1111-1111-1111-111111111111",
+        authorName: "Author One",
+        deletedAt: null,
+      })
+    ),
+    stubMethod(
+      analyticsModel,
+      "createReadLogEvent",
+      async () => null
+    ),
+  ];
+
+  const app = await buildApp();
+  try {
+    let finalResponse = await app.inject({
+      method: "GET",
+      url: `/api/v1/articles/${articleId}`,
+    });
+
+    for (let index = 0; index < 20; index += 1) {
+      finalResponse = await app.inject({
+        method: "GET",
+        url: `/api/v1/articles/${articleId}`,
+      });
+    }
+
+    assert.equal(finalResponse.statusCode, 429);
+    assert.equal(finalResponse.json().Success, false);
+    assert.equal(
+      finalResponse.json().Message.includes("Rate limit exceeded"),
+      true
+    );
+  } finally {
+    await app.close();
+    for (const restore of restoreFns.reverse()) {
+      restore();
+    }
+  }
+});

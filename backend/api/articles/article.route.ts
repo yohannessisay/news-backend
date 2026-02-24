@@ -1,5 +1,6 @@
 import { FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import {
+  getRequestUser,
   optionalAuthPreHandler,
   requireAuthPreHandler,
   requireRolePreHandler,
@@ -168,13 +169,25 @@ const articleRoutes: FastifyPluginAsyncTypebox = async (app) => {
   app.get<{ Params: ArticlePathParams }>(
     "/articles/:id",
     {
-      preHandler: [optionalAuthPreHandler],
+      preHandler: [
+        optionalAuthPreHandler,
+        app.rateLimit({
+          keyGenerator: (request) => {
+            const user = getRequestUser(request);
+            const actorKey = user ? `user:${user.id}` : `ip:${request.ip}`;
+            return `${actorKey}:article-read`;
+          },
+          max: 20,
+          timeWindow: 10_000,
+        }),
+      ],
       schema: {
         tags: ["Articles"],
         summary: "Get article detail and trigger read tracking",
         params: ArticlePathParamsSchema,
         response: {
           200: ArticleDetailResponseSchema,
+          429: ArticleErrorResponseSchema,
           404: ArticleErrorResponseSchema,
           410: ArticleErrorResponseSchema,
           500: ArticleErrorResponseSchema,

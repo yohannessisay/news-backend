@@ -34,6 +34,17 @@ export function registerGlobalErrorHandlers(app: FastifyInstance) {
       return sendError(reply, error.statusCode, error.message, errorList);
     }
 
+    if (
+      typeof (error as { statusCode?: unknown }).statusCode === "number" &&
+      (error as { statusCode: number }).statusCode >= 400 &&
+      (error as { statusCode: number }).statusCode < 500
+    ) {
+      const statusCode = (error as { statusCode: number }).statusCode;
+      const message =
+        (error as { message?: string }).message?.trim() || "Request failed";
+      return sendError(reply, statusCode, message, [message]);
+    }
+
     app.log.error(error);
 
     return sendError(reply, 500, "Internal server error", [
