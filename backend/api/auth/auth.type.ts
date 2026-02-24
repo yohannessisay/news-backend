@@ -3,6 +3,7 @@ import {
   ApiErrorResponseSchema,
   createSuccessResponseSchema,
 } from "../../shared/types/response.type";
+import { NullableAuditUserSchema } from "../../shared/types/audit-user.type";
 
 export const UserRoleSchema = Type.Union([
   Type.Literal("author"),
@@ -59,8 +60,8 @@ export const AuthUserSchema = Type.Object(
     role: UserRoleSchema,
     createdAt: Type.String({ format: "date-time" }),
     updatedAt: Type.String({ format: "date-time" }),
-    createdBy: Type.Union([Type.String({ format: "uuid" }), Type.Null()]),
-    updatedBy: Type.Union([Type.String({ format: "uuid" }), Type.Null()]),
+    createdBy: NullableAuditUserSchema,
+    updatedBy: NullableAuditUserSchema,
   },
   { additionalProperties: false }
 );

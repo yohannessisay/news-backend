@@ -2,6 +2,7 @@ import { AppError } from "../../shared/types/app-error";
 import {
   createUser,
   findUserByEmail,
+  findUserWithAuditById,
   setUserSelfAuditFields,
   touchUserAudit,
 } from "./auth.model";
@@ -50,11 +51,17 @@ export class AuthService {
         password,
         role,
       });
-      const finalizedUser = await setUserSelfAuditFields(insertedUser.id);
-      const user = finalizedUser ?? insertedUser;
+      await setUserSelfAuditFields(insertedUser.id);
+      const user = await findUserWithAuditById(insertedUser.id);
+      if (!user) {
+        throw new AppError({
+          statusCode: 500,
+          message: "Failed to load registered user",
+        });
+      }
       const accessToken = buildAccessToken({
         sub: user.id,
-        role: user.role as UserRole,
+        role: user.role,
       });
 
       return {
@@ -63,7 +70,7 @@ export class AuthService {
           id: user.id,
           name: user.name,
           email: user.email,
-          role: user.role as UserRole,
+          role: user.role,
           createdAt: user.createdAt.toISOString(),
           updatedAt: user.updatedAt.toISOString(),
           createdBy: user.createdBy,
@@ -102,11 +109,17 @@ export class AuthService {
       });
     }
 
-    const touchedUser = await touchUserAudit(user.id, user.id);
-    const authUser = touchedUser ?? user;
+    await touchUserAudit(user.id, user.id);
+    const authUser = await findUserWithAuditById(user.id);
+    if (!authUser) {
+      throw new AppError({
+        statusCode: 500,
+        message: "Failed to load user profile",
+      });
+    }
     const accessToken = buildAccessToken({
       sub: authUser.id,
-      role: authUser.role as UserRole,
+      role: authUser.role,
     });
 
     return {
@@ -115,7 +128,7 @@ export class AuthService {
         id: authUser.id,
         name: authUser.name,
         email: authUser.email,
-        role: authUser.role as UserRole,
+        role: authUser.role,
         createdAt: authUser.createdAt.toISOString(),
         updatedAt: authUser.updatedAt.toISOString(),
         createdBy: authUser.createdBy,
