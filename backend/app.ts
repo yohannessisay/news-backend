@@ -17,7 +17,8 @@ export async function buildApp() {
     openapi: {
       info: {
         title: "News Backend API",
-        description: "Modular Fastify API with authentication and health endpoints",
+        description:
+          "Modular Fastify API for authentication, articles, analytics, and author dashboard",
         version: "1.0.0",
       },
       servers: [
@@ -34,7 +35,28 @@ export async function buildApp() {
           name: "Auth",
           description: "Authentication endpoints",
         },
+        {
+          name: "Articles",
+          description: "Article lifecycle and public feed endpoints",
+        },
+        {
+          name: "Author",
+          description: "Author dashboard endpoints",
+        },
+        {
+          name: "Analytics",
+          description: "Analytics processing endpoints",
+        },
       ],
+      components: {
+        securitySchemes: {
+          BearerAuth: {
+            type: "http",
+            scheme: "bearer",
+            bearerFormat: "JWT",
+          },
+        },
+      },
     },
   });
 

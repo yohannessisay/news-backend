@@ -23,16 +23,20 @@ function requireNumberEnv(name: string) {
   return parsedValue;
 }
 
+const dbUser = requireEnv("DB_USER");
+const dbPassword = requireEnv("DB_PASSWORD");
+const dbHost = requireEnv("DB_HOST");
+const dbPort = requireNumberEnv("DB_PORT");
+const dbName = requireEnv("DB_NAME");
+const dbUrl = `postgresql://${encodeURIComponent(dbUser)}:${encodeURIComponent(
+  dbPassword
+)}@${dbHost}:${dbPort}/${dbName}?sslmode=disable`;
+
 export default defineConfig({
   dialect: "postgresql",
   schema: "./shared/db/schema.ts",
   out: "./drizzle",
   dbCredentials: {
-    host: requireEnv("DB_HOST"),
-    port: requireNumberEnv("DB_PORT"),
-    user: requireEnv("DB_USER"),
-    password: requireEnv("DB_PASSWORD"),
-    database: requireEnv("DB_NAME"),
-    ssl: false,
+    url: dbUrl,
   },
 });

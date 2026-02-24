@@ -3,13 +3,12 @@ import { Pool } from "pg";
 import { env } from "../utils/env";
 import * as schema from "./schema";
 
+const connectionString = `postgresql://${encodeURIComponent(
+  env.dbUser
+)}:${encodeURIComponent(env.dbPassword)}@${env.dbHost}:${env.dbPort}/${env.dbName}?sslmode=disable`;
+
 const pool = new Pool({
-  host: env.dbHost,
-  port: env.dbPort,
-  user: env.dbUser,
-  password: env.dbPassword,
-  database: env.dbName,
-  ssl: false,
+  connectionString,
 });
 
 export const db = drizzle(pool, { schema });
