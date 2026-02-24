@@ -19,7 +19,11 @@ import {
 
 const securitySchema = pgSchema("security");
 export const userRoleEnum = securitySchema.enum("user_role", ["author", "reader"]);
-export const articleStatusEnum = pgEnum("article_status", ["Draft", "Published"]);
+export const articleStatusEnum = pgEnum("article_status", [
+  "Draft",
+  "Published",
+  "Archived",
+]);
 
 export const users = securitySchema.table(
   "users",

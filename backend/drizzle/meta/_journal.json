@@ -15,6 +15,13 @@
       "when": 1771924214053,
       "tag": "0001_burly_drax",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771933481758,
+      "tag": "0002_sad_meltdown",
+      "breakpoints": true
     }
   ]
 }

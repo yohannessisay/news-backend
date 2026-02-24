@@ -34,7 +34,7 @@ export async function createArticle(input: {
       title: input.body.title,
       content: input.body.content,
       category: input.body.category,
-      status: input.body.status ?? "Draft",
+      status: "Draft",
       authorId: input.authorId,
       createdBy: input.authorId,
       updatedBy: input.authorId,
@@ -54,22 +54,13 @@ export async function findArticleById(id: string) {
       status: articles.status,
       createdAt: articles.createdAt,
       authorId: articles.authorId,
+      createdBy: articles.createdBy,
       authorName: users.name,
       deletedAt: articles.deletedAt,
     })
     .from(articles)
     .innerJoin(users, eq(articles.authorId, users.id))
     .where(eq(articles.id, id))
-    .limit(1);
-
-  return result[0] ?? null;
-}
-
-export async function findAuthorArticleById(id: string, authorId: string) {
-  const result = await db
-    .select()
-    .from(articles)
-    .where(and(eq(articles.id, id), eq(articles.authorId, authorId)))
     .limit(1);
 
   return result[0] ?? null;
@@ -111,7 +102,7 @@ export async function updateAuthorArticle(params: {
     .where(
       and(
         eq(articles.id, params.id),
-        eq(articles.authorId, params.authorId),
+        eq(articles.createdBy, params.authorId),
         isNull(articles.deletedAt)
       )
     )
@@ -132,7 +123,7 @@ export async function softDeleteAuthorArticle(id: string, authorId: string) {
     .where(
       and(
         eq(articles.id, id),
-        eq(articles.authorId, authorId),
+        eq(articles.createdBy, authorId),
         isNull(articles.deletedAt)
       )
     )

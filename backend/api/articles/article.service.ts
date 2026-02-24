@@ -12,10 +12,36 @@ import {
   softDeleteAuthorArticle,
   updateAuthorArticle,
 } from "./article.model";
-import { ArticleListQuery, CreateArticleBody, MyArticlesQuery, UpdateArticleBody } from "./article.type";
+import {
+  ArticleListQuery,
+  ArticleStatus,
+  CreateArticleBody,
+  MyArticlesQuery,
+  UpdateArticleBody,
+} from "./article.type";
 
 function toBooleanString(value?: string) {
   return value === "true" || value === "1";
+}
+
+function canTransitionStatus(from: ArticleStatus, to: ArticleStatus) {
+  if (from === to) {
+    return true;
+  }
+
+  if (from === "Draft" && (to === "Published" || to === "Archived")) {
+    return true;
+  }
+
+  if (from === "Published" && to === "Archived") {
+    return true;
+  }
+
+  if (from === "Archived" && to === "Published") {
+    return true;
+  }
+
+  return false;
 }
 
 export class ArticleService {
@@ -101,7 +127,7 @@ export class ArticleService {
         message: "Article not found",
       });
     }
-    if (existingArticle.authorId !== author.id) {
+    if (existingArticle.createdBy !== author.id) {
       throw new AppError({
         statusCode: 403,
         message: "Forbidden",
@@ -111,6 +137,28 @@ export class ArticleService {
       throw new AppError({
         statusCode: 410,
         message: "News article no longer available",
+      });
+    }
+
+    const hasContentUpdates =
+      body.title !== undefined ||
+      body.content !== undefined ||
+      body.category !== undefined;
+
+    if (hasContentUpdates && existingArticle.status !== "Draft") {
+      throw new AppError({
+        statusCode: 400,
+        message: "Only draft articles can be edited",
+      });
+    }
+
+    if (
+      body.status !== undefined &&
+      !canTransitionStatus(existingArticle.status, body.status)
+    ) {
+      throw new AppError({
+        statusCode: 400,
+        message: "Invalid status transition",
       });
     }
 
@@ -154,7 +202,7 @@ export class ArticleService {
         message: "Article not found",
       });
     }
-    if (existingArticle.authorId !== author.id) {
+    if (existingArticle.createdBy !== author.id) {
       throw new AppError({
         statusCode: 403,
         message: "Forbidden",

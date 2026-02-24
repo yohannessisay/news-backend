@@ -11,6 +11,11 @@ export async function buildApp() {
     logger: {
       level: env.nodeEnv === "development" ? "debug" : "info",
     },
+    ajv: {
+      customOptions: {
+        removeAdditional: false,
+      },
+    },
   }).withTypeProvider<TypeBoxTypeProvider>();
 
   await app.register(swagger, {

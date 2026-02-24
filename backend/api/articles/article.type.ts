@@ -8,6 +8,7 @@ import {
 export const ArticleStatusSchema = Type.Union([
   Type.Literal("Draft"),
   Type.Literal("Published"),
+  Type.Literal("Archived"),
 ]);
 
 export const ArticlePathParamsSchema = Type.Object(
@@ -22,7 +23,6 @@ export const CreateArticleBodySchema = Type.Object(
     title: Type.String({ minLength: 1, maxLength: 150 }),
     content: Type.String({ minLength: 50 }),
     category: Type.String({ minLength: 1, maxLength: 80 }),
-    status: Type.Optional(ArticleStatusSchema),
   },
   { additionalProperties: false }
 );
