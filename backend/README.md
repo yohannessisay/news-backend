@@ -33,6 +33,32 @@ npm run db:migrate
 npm run dev
 ```
 
+## Postman Collection
+
+Import this file directly in Postman:
+
+- `news-backend.postman_collection.json`
+
+Default base URL in the collection is:
+
+- `http://localhost:4000/api/v1`
+
+Recommended run order inside the collection:
+
+1. `Health`
+2. `Auth`
+3. `Articles`
+4. `Author`
+5. `Analytics`
+
+The collection auto-saves:
+
+- `authorAccessToken`
+- `readerAccessToken`
+- `articleId`
+
+from previous responses, so you can run the full flow end-to-end without manual copy/paste.
+
 ## Environment Variables
 
 - `NODE_ENV`
