@@ -9,7 +9,7 @@
     "start": "cross-env NODE_ENV=production node ./dist/server.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "test": "node --test --loader tsx ./**/*.test.ts"
+    "test": "node --test --loader tsx"
   },
   "author": "",
   "license": "ISC",

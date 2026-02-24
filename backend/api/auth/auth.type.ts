@@ -15,22 +15,38 @@ export const RegisterRequestSchema = Type.Object(
       minLength: 2,
       maxLength: 120,
       pattern: "^[A-Za-z ]+$",
+      examples: ["John Doe"],
     }),
-    email: Type.String({ format: "email", maxLength: 254 }),
+    email: Type.String({
+      format: "email",
+      maxLength: 254,
+      examples: ["john.doe@example.com"],
+    }),
     password: Type.String({
       minLength: 8,
       maxLength: 128,
       pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z\\d]).{8,128}$",
+      examples: ["StrongPass@123"],
     }),
-    role: UserRoleSchema,
+    role: Type.Union([Type.Literal("author"), Type.Literal("reader")], {
+      examples: ["author"],
+    }),
   },
   { additionalProperties: false }
 );
 
 export const LoginRequestSchema = Type.Object(
   {
-    email: Type.String({ format: "email", maxLength: 254 }),
-    password: Type.String({ minLength: 8, maxLength: 128 }),
+    email: Type.String({
+      format: "email",
+      maxLength: 254,
+      examples: ["john.doe@example.com"],
+    }),
+    password: Type.String({
+      minLength: 8,
+      maxLength: 128,
+      examples: ["StrongPass@123"],
+    }),
   },
   { additionalProperties: false }
 );

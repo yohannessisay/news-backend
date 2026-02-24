@@ -1,75 +1,92 @@
 # News Backend
 
-Modular Fastify + TypeScript backend with a Nest-style folder approach where each module owns its full flow.
+Fastify + TypeScript backend with module-first structure (`api/<module>`) and shared reusable foundations in `shared/`.
 
-## Endpoints
+## API
 
 - `GET /api/v1/health`
 - `POST /api/v1/auth/register`
 - `POST /api/v1/auth/login`
+- `POST /api/v1/articles` (author only)
+- `GET /api/v1/articles/me` (author only)
+- `PUT /api/v1/articles/:id` (author only, own article only)
+- `DELETE /api/v1/articles/:id` (author only, soft delete)
+- `GET /api/v1/articles` (public, published + non-deleted only, paginated)
+- `GET /api/v1/articles/:id` (public/optional auth, read tracking)
+- `GET /api/v1/author/dashboard` (author only, paginated views)
+- `POST /api/v1/analytics/process` (author only, enqueue daily aggregation)
 - `GET /docs` (Swagger UI)
 
-## Project Structure
+## Setup
 
-```text
-.
-├── api
-│   ├── auth
-│   │   ├── auth.route.ts
-│   │   ├── auth.controller.ts
-│   │   ├── auth.service.ts
-│   │   ├── auth.model.ts
-│   │   ├── auth.type.ts
-│   │   └── auth.util.ts
-│   ├── health
-│   │   ├── health.route.ts
-│   │   ├── health.controller.ts
-│   │   ├── health.service.ts
-│   │   └── health.type.ts
-│   └── index.ts
-├── drizzle
-│   ├── 0000_*.sql
-│   └── meta
-├── shared
-│   ├── db
-│   │   ├── audit-columns.ts
-│   │   ├── client.ts
-│   │   └── schema.ts
-│   ├── errors
-│   ├── fastify
-│   ├── types
-│   └── utils
-├── app.ts
-└── server.ts
-```
-
-## Environment
-
-Create your local env:
-
+1. Copy env file:
 ```bash
 cp .env.example .env
 ```
+2. Ensure Postgres is running with values from `.env`.
+3. Run migrations:
+```bash
+npm run db:migrate
+```
+4. Start server:
+```bash
+npm run dev
+```
 
-JWT is configured through:
+## Environment Variables
 
-- `JWT_SECRET`
-- `JWT_ISSUER`
-- `JWT_AUDIENCE`
-- `JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS`
-
-Postgres is configured through:
-
+- `NODE_ENV`
+- `HOST`
+- `PORT`
 - `DB_HOST`
 - `DB_PORT`
 - `DB_USER`
 - `DB_PASSWORD`
 - `DB_NAME`
+- `JWT_SECRET`
+- `JWT_ISSUER`
+- `JWT_AUDIENCE`
+- `JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS`
 
-Audit columns are centralized in `shared/db/audit-columns.ts` and reused per table.
+All env vars are required. App startup fails fast if any value is missing.
 
-Global API response shaping is centralized in `shared/fastify/response-handler.ts` with:
-- standard response envelope (`Success`, `Message`, `Object`, `Errors`)
+## Response Format
+
+Base response:
+
+```json
+{
+  "Success": true,
+  "Message": "Any message",
+  "Object": {},
+  "Errors": null
+}
+```
+
+Paginated response:
+
+```json
+{
+  "Success": true,
+  "Message": "Any message",
+  "Object": [],
+  "PageNumber": 1,
+  "PageSize": 10,
+  "TotalSize": 0,
+  "Errors": null
+}
+```
+
+## Notes
+
+- ORM: Drizzle + PostgreSQL.
+- User data is stored in `security.users`.
+- Shared audit columns (`created_at`, `updated_at`, `created_by`, `updated_by`) are centralized in `shared/db/audit-columns.ts`.
+- Read tracking is non-blocking and queued for analytics aggregation.
+
+## Refresh Abuse Control
+
+To prevent one user from generating 100 reads in seconds, current logic applies a 10-second dedupe window per `(articleId, readerId)`. For stricter control in production, add Redis rate-limits and an IP + user fingerprint throttle at the article-read endpoint.
 
 ## Commands
 
