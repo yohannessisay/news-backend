@@ -1,5 +1,4 @@
 import { AppError } from "../../shared/types/app-error";
-import { env } from "../../shared/utils/env";
 import {
   createUser,
   findUserByEmail,
@@ -20,8 +19,6 @@ import {
   normalizeEmail,
   normalizeName,
 } from "./auth.util";
-
-const ACCESS_TOKEN_TTL_SECONDS = env.jwtAccessTokenExpiresInSeconds;
 
 export class AuthService {
   async register(payload: RegisterRequest): Promise<LoginResponseData> {
@@ -64,8 +61,6 @@ export class AuthService {
 
       return {
         accessToken,
-        tokenType: "Bearer",
-        expiresIn: ACCESS_TOKEN_TTL_SECONDS,
         user: {
           id: user.id,
           name: user.name,
@@ -120,8 +115,6 @@ export class AuthService {
 
     return {
       accessToken,
-      tokenType: "Bearer",
-      expiresIn: ACCESS_TOKEN_TTL_SECONDS,
       user: {
         id: authUser.id,
         name: authUser.name,

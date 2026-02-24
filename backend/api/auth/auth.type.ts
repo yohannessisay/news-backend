@@ -48,8 +48,6 @@ export const AuthUserSchema = Type.Object(
 export const LoginResponseDataSchema = Type.Object(
   {
     accessToken: Type.String(),
-    tokenType: Type.Literal("Bearer"),
-    expiresIn: Type.Number(),
     user: AuthUserSchema,
   },
   { additionalProperties: false }
