@@ -17,8 +17,12 @@ export const RegisterRequestSchema = Type.Object(
       pattern: "^[A-Za-z ]+$",
     }),
     email: Type.String({ format: "email", maxLength: 254 }),
-    password: Type.String({ minLength: 8, maxLength: 128 }),
-    role: Type.Optional(UserRoleSchema),
+    password: Type.String({
+      minLength: 8,
+      maxLength: 128,
+      pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z\\d]).{8,128}$",
+    }),
+    role: UserRoleSchema,
   },
   { additionalProperties: false }
 );
@@ -69,7 +73,5 @@ export type AuthUser = Static<typeof AuthUserSchema>;
 export type LoginResponseData = Static<typeof LoginResponseDataSchema>;
 export type AccessTokenPayload = {
   sub: string;
-  email: string;
   role: UserRole;
-  ts: number;
 };

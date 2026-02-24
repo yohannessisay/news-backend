@@ -24,7 +24,7 @@ export class AuthService {
   async register(payload: RegisterRequest): Promise<LoginResponseData> {
     const email = normalizeEmail(payload.email);
     const name = normalizeName(payload.name);
-    const role: UserRole = payload.role ?? "reader";
+    const role: UserRole = payload.role;
 
     if (!isValidName(name)) {
       throw new AppError({
@@ -54,9 +54,7 @@ export class AuthService {
       const user = finalizedUser ?? insertedUser;
       const accessToken = buildAccessToken({
         sub: user.id,
-        email: user.email,
         role: user.role as UserRole,
-        ts: Date.now(),
       });
 
       return {
@@ -108,9 +106,7 @@ export class AuthService {
     const authUser = touchedUser ?? user;
     const accessToken = buildAccessToken({
       sub: authUser.id,
-      email: authUser.email,
       role: authUser.role as UserRole,
-      ts: Date.now(),
     });
 
     return {
