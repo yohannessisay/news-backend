@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual } from "node:crypto";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { env } from "../../shared/utils/env";
 import { AccessTokenPayload } from "./auth.type";
@@ -7,20 +7,22 @@ export function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
-export function createPasswordHash(rawPassword: string) {
-  return createHash("sha256").update(rawPassword).digest("hex");
+export function normalizeName(name: string) {
+  return name.trim().replace(/\s+/g, " ");
 }
 
-export function isPasswordValid(rawPassword: string, storedPasswordHash: string) {
-  const incomingPasswordHash = createPasswordHash(rawPassword);
-  const incomingBuffer = Buffer.from(incomingPasswordHash);
-  const storedBuffer = Buffer.from(storedPasswordHash);
+export function isValidName(name: string) {
+  return /^[A-Za-z ]+$/.test(name);
+}
 
-  if (incomingBuffer.length !== storedBuffer.length) {
-    return false;
-  }
+export async function createPasswordHash(rawPassword: string) {
+  const saltRounds = 12;
 
-  return timingSafeEqual(incomingBuffer, storedBuffer);
+  return bcrypt.hash(rawPassword, saltRounds);
+}
+
+export async function isPasswordValid(rawPassword: string, storedPasswordHash: string) {
+  return bcrypt.compare(rawPassword, storedPasswordHash);
 }
 
 export function buildAccessToken(payload: AccessTokenPayload) {

@@ -1,7 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { ApiSuccessResponse } from "../../shared/types/response.type";
+import { sendSuccess } from "../../shared/fastify/response-handler";
 import { HealthService } from "./health.service";
-import { HealthResponseData } from "./health.type";
 
 const healthService = new HealthService();
 
@@ -11,12 +10,5 @@ export async function healthController(
 ) {
   const data = healthService.getStatus();
 
-  const response: ApiSuccessResponse<HealthResponseData> = {
-    success: true,
-    message: "Service is healthy",
-    data,
-    error: null,
-  };
-
-  return reply.status(200).send(response);
+  return sendSuccess(reply, 200, "Service is healthy", data);
 }

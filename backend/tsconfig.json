@@ -15,8 +15,7 @@
     "app.ts",
     "server.ts",
     "api/**/*.ts",
-    "shared/**/*.ts",
-    "scripts/**/*.ts"
+    "shared/**/*.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }

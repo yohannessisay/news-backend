@@ -1,20 +1,17 @@
 type AppErrorInput = {
   statusCode: number;
-  code: string;
   message: string;
-  details?: unknown;
+  errors?: string[];
 };
 
 export class AppError extends Error {
   readonly statusCode: number;
-  readonly code: string;
-  readonly details?: unknown;
+  readonly errors?: string[];
 
-  constructor({ statusCode, code, message, details }: AppErrorInput) {
+  constructor({ statusCode, message, errors }: AppErrorInput) {
     super(message);
     this.name = "AppError";
     this.statusCode = statusCode;
-    this.code = code;
-    this.details = details;
+    this.errors = errors;
   }
 }

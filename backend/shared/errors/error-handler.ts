@@ -1,5 +1,5 @@
 import { FastifyError, FastifyInstance } from "fastify";
-import { ApiErrorResponse } from "../types/response.type";
+import { sendError } from "../fastify/response-handler";
 import { AppError } from "../types/app-error";
 
 type FastifyValidationIssue = {
@@ -7,22 +7,6 @@ type FastifyValidationIssue = {
   message?: string;
   keyword?: string;
 };
-
-function buildErrorResponse(
-  message: string,
-  code: string,
-  details?: unknown
-): ApiErrorResponse {
-  return {
-    success: false,
-    message,
-    data: null,
-    error: {
-      code,
-      details,
-    },
-  };
-}
 
 function isValidationError(
   error: unknown
@@ -37,35 +21,29 @@ function isValidationError(
 export function registerGlobalErrorHandlers(app: FastifyInstance) {
   app.setErrorHandler((error, _request, reply) => {
     if (isValidationError(error)) {
-      const details = error.validation.map((issue) => ({
-        field: issue.instancePath ?? "",
-        message: issue.message ?? issue.keyword ?? "Invalid value",
-      }));
+      const validationErrors = error.validation.map(
+        (issue) => `${issue.instancePath || "body"}: ${issue.message ?? "Invalid value"}`
+      );
 
-      return reply
-        .status(400)
-        .send(buildErrorResponse("Request validation failed", "VALIDATION_ERROR", details));
+      return sendError(reply, 400, "Request validation failed", validationErrors);
     }
 
     if (error instanceof AppError) {
-      return reply
-        .status(error.statusCode)
-        .send(buildErrorResponse(error.message, error.code, error.details));
+      const errorList =
+        error.errors && error.errors.length > 0 ? error.errors : [error.message];
+      return sendError(reply, error.statusCode, error.message, errorList);
     }
 
     app.log.error(error);
 
-    return reply
-      .status(500)
-      .send(buildErrorResponse("Internal server error", "INTERNAL_SERVER_ERROR"));
+    return sendError(reply, 500, "Internal server error", [
+      "An unexpected error occurred",
+    ]);
   });
 
   app.setNotFoundHandler((request, reply) => {
-    return reply.status(404).send(
-      buildErrorResponse(
-        `Route ${request.method} ${request.url} not found`,
-        "ROUTE_NOT_FOUND"
-      )
-    );
+    return sendError(reply, 404, "Route not found", [
+      `${request.method} ${request.url} not found`,
+    ]);
   });
 }

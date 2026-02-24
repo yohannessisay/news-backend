@@ -5,13 +5,9 @@ Modular Fastify + TypeScript backend with a Nest-style folder approach where eac
 ## Endpoints
 
 - `GET /api/v1/health`
+- `POST /api/v1/auth/register`
 - `POST /api/v1/auth/login`
 - `GET /docs` (Swagger UI)
-
-## Default Login
-
-- `email`: `admin@example.com`
-- `password`: `Password@123`
 
 ## Project Structure
 
@@ -31,15 +27,20 @@ Modular Fastify + TypeScript backend with a Nest-style folder approach where eac
 │   │   ├── health.service.ts
 │   │   └── health.type.ts
 │   └── index.ts
+├── drizzle
+│   ├── 0000_*.sql
+│   └── meta
 ├── shared
+│   ├── db
+│   │   ├── audit-columns.ts
+│   │   ├── client.ts
+│   │   └── schema.ts
 │   ├── errors
-│   ├── response
+│   ├── fastify
 │   ├── types
 │   └── utils
 ├── app.ts
-├── server.ts
-└── scripts
-    └── generate-openapi.ts
+└── server.ts
 ```
 
 ## Environment
@@ -57,6 +58,19 @@ JWT is configured through:
 - `JWT_AUDIENCE`
 - `JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS`
 
+Postgres is configured through:
+
+- `DB_HOST`
+- `DB_PORT`
+- `DB_USER`
+- `DB_PASSWORD`
+- `DB_NAME`
+
+Audit columns are centralized in `shared/db/audit-columns.ts` and reused per table.
+
+Global API response shaping is centralized in `shared/fastify/response-handler.ts` with:
+- standard response envelope (`Success`, `Message`, `Object`, `Errors`)
+
 ## Commands
 
 ```bash
@@ -64,5 +78,6 @@ npm run dev
 npm run typecheck
 npm run build
 npm start
-npm run openapi
+npm run db:generate
+npm run db:migrate
 ```

@@ -1,9 +1,21 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { ApiSuccessResponse } from "../../shared/types/response.type";
+import { sendSuccess } from "../../shared/fastify/response-handler";
 import { AuthService } from "./auth.service";
-import { LoginRequest, LoginResponseData } from "./auth.type";
+import {
+  LoginRequest,
+  RegisterRequest,
+} from "./auth.type";
 
 const authService = new AuthService();
+
+export async function registerController(
+  request: FastifyRequest<{ Body: RegisterRequest }>,
+  reply: FastifyReply
+) {
+  const data = await authService.register(request.body);
+
+  return sendSuccess(reply, 201, "Registration successful", data);
+}
 
 export async function loginController(
   request: FastifyRequest<{ Body: LoginRequest }>,
@@ -11,12 +23,5 @@ export async function loginController(
 ) {
   const data = await authService.login(request.body);
 
-  const response: ApiSuccessResponse<LoginResponseData> = {
-    success: true,
-    message: "Login successful",
-    data,
-    error: null,
-  };
-
-  return reply.status(200).send(response);
+  return sendSuccess(reply, 200, "Login successful", data);
 }

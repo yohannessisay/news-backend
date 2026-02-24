@@ -1,35 +1,120 @@
 import { AppError } from "../../shared/types/app-error";
 import { env } from "../../shared/utils/env";
-import { findUserByEmail } from "./auth.model";
-import { LoginRequest, LoginResponseData } from "./auth.type";
-import { buildAccessToken, isPasswordValid, normalizeEmail } from "./auth.util";
+import {
+  createUser,
+  findUserByEmail,
+  setUserSelfAuditFields,
+  touchUserAudit,
+} from "./auth.model";
+import {
+  LoginRequest,
+  LoginResponseData,
+  RegisterRequest,
+  UserRole,
+} from "./auth.type";
+import {
+  buildAccessToken,
+  createPasswordHash,
+  isPasswordValid,
+  isValidName,
+  normalizeEmail,
+  normalizeName,
+} from "./auth.util";
 
 const ACCESS_TOKEN_TTL_SECONDS = env.jwtAccessTokenExpiresInSeconds;
 
 export class AuthService {
+  async register(payload: RegisterRequest): Promise<LoginResponseData> {
+    const email = normalizeEmail(payload.email);
+    const name = normalizeName(payload.name);
+    const role: UserRole = payload.role ?? "reader";
+
+    if (!isValidName(name)) {
+      throw new AppError({
+        statusCode: 400,
+        message: "Name must contain only alphabets and spaces",
+      });
+    }
+
+    const existingUser = await findUserByEmail(email);
+    if (existingUser) {
+      throw new AppError({
+        statusCode: 409,
+        message: "Email already exists",
+      });
+    }
+
+    const password = await createPasswordHash(payload.password);
+
+    try {
+      const insertedUser = await createUser({
+        name,
+        email,
+        password,
+        role,
+      });
+      const finalizedUser = await setUserSelfAuditFields(insertedUser.id);
+      const user = finalizedUser ?? insertedUser;
+      const accessToken = buildAccessToken({
+        sub: user.id,
+        email: user.email,
+        role: user.role as UserRole,
+        ts: Date.now(),
+      });
+
+      return {
+        accessToken,
+        tokenType: "Bearer",
+        expiresIn: ACCESS_TOKEN_TTL_SECONDS,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role as UserRole,
+          createdAt: user.createdAt.toISOString(),
+          updatedAt: user.updatedAt.toISOString(),
+          createdBy: user.createdBy,
+          updatedBy: user.updatedBy,
+        },
+      };
+    } catch (error: unknown) {
+      const code = (error as { code?: string }).code;
+      if (code === "23505") {
+        throw new AppError({
+          statusCode: 409,
+          message: "Email already exists",
+        });
+      }
+
+      throw error;
+    }
+  }
+
   async login(payload: LoginRequest): Promise<LoginResponseData> {
     const email = normalizeEmail(payload.email);
-    const user = findUserByEmail(email);
+    const user = await findUserByEmail(email);
 
-    if (!user || !isPasswordValid(payload.password, user.passwordHash)) {
+    if (!user) {
       throw new AppError({
         statusCode: 401,
-        code: "AUTH_INVALID_CREDENTIALS",
         message: "Invalid email or password",
       });
     }
 
-    const sanitizedUser = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    };
+    const isValid = await isPasswordValid(payload.password, user.password);
+    if (!isValid) {
+      throw new AppError({
+        statusCode: 401,
+        message: "Invalid email or password",
+      });
+    }
 
+    const touchedUser = await touchUserAudit(user.id, user.id);
+    const authUser = touchedUser ?? user;
     const accessToken = buildAccessToken({
-      sub: sanitizedUser.id,
-      email: sanitizedUser.email,
-      role: sanitizedUser.role,
+      sub: authUser.id,
+      email: authUser.email,
+      role: authUser.role as UserRole,
       ts: Date.now(),
     });
 
@@ -37,7 +122,16 @@ export class AuthService {
       accessToken,
       tokenType: "Bearer",
       expiresIn: ACCESS_TOKEN_TTL_SECONDS,
-      user: sanitizedUser,
+      user: {
+        id: authUser.id,
+        name: authUser.name,
+        email: authUser.email,
+        role: authUser.role as UserRole,
+        createdAt: authUser.createdAt.toISOString(),
+        updatedAt: authUser.updatedAt.toISOString(),
+        createdBy: authUser.createdBy,
+        updatedBy: authUser.updatedBy,
+      },
     };
   }
 }

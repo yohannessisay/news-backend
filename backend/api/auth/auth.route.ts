@@ -1,12 +1,33 @@
 import { FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import { loginController } from "./auth.controller";
+import { loginController, registerController } from "./auth.controller";
 import {
   LoginErrorResponseSchema,
   LoginRequestSchema,
   LoginSuccessResponseSchema,
+  RegisterErrorResponseSchema,
+  RegisterRequestSchema,
+  RegisterSuccessResponseSchema,
 } from "./auth.type";
 
 const authRoutes: FastifyPluginAsyncTypebox = async (app) => {
+  app.post(
+    "/register",
+    {
+      schema: {
+        tags: ["Auth"],
+        summary: "Register a new account",
+        body: RegisterRequestSchema,
+        response: {
+          201: RegisterSuccessResponseSchema,
+          400: RegisterErrorResponseSchema,
+          409: RegisterErrorResponseSchema,
+          500: RegisterErrorResponseSchema,
+        },
+      },
+    },
+    registerController
+  );
+
   app.post(
     "/login",
     {
