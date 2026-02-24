@@ -1,6 +1,7 @@
 import { FastifyReply } from "fastify";
 import {
   ApiErrorResponse,
+  ApiPaginatedSuccessResponse,
   ApiSuccessResponse,
 } from "../types/response.type";
 
@@ -31,6 +32,28 @@ export function sendError(
     Message: message,
     Object: null,
     Errors: errors,
+  };
+
+  return reply.status(statusCode).send(response);
+}
+
+export function sendPaginatedSuccess<T>(
+  reply: FastifyReply,
+  statusCode: number,
+  message: string,
+  object: T[],
+  pageNumber: number,
+  pageSize: number,
+  totalSize: number
+) {
+  const response: ApiPaginatedSuccessResponse<T> = {
+    Success: true,
+    Message: message,
+    Object: object,
+    PageNumber: pageNumber,
+    PageSize: pageSize,
+    TotalSize: totalSize,
+    Errors: null,
   };
 
   return reply.status(statusCode).send(response);
