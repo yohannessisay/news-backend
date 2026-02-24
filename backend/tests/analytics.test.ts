@@ -17,10 +17,10 @@ function buildToken(sub: string, role: "author" | "reader", expiresInSeconds = 3
 function stubMethod<T extends object, K extends keyof T>(
   object: T,
   methodName: K,
-  replacement: T[K]
+  replacement: unknown
 ) {
   const original = object[methodName];
-  object[methodName] = replacement;
+  object[methodName] = replacement as T[K];
 
   return () => {
     object[methodName] = original;
@@ -33,20 +33,20 @@ test("POST /api/v1/analytics/process returns 202", async () => {
     stubMethod(
       analyticsModel,
       "listArticleIdsForDate",
-      (async () => [
+      async () => [
         "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
         "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-      ]) as typeof analyticsModel.listArticleIdsForDate
+      ]
     ),
     stubMethod(
       analyticsModel,
       "countArticleReadsForDate",
-      (async () => 3) as typeof analyticsModel.countArticleReadsForDate
+      async () => 3
     ),
     stubMethod(
       analyticsModel,
       "upsertDailyAnalyticsRow",
-      (async () => undefined) as typeof analyticsModel.upsertDailyAnalyticsRow
+      async () => undefined
     ),
   ];
 

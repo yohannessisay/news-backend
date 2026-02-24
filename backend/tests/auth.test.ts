@@ -7,10 +7,10 @@ import { authModel } from "../api/auth/auth.model";
 function stubMethod<T extends object, K extends keyof T>(
   object: T,
   methodName: K,
-  replacement: T[K]
+  replacement: unknown
 ) {
   const original = object[methodName];
-  object[methodName] = replacement;
+  object[methodName] = replacement as T[K];
 
   return () => {
     object[methodName] = original;
@@ -20,11 +20,11 @@ function stubMethod<T extends object, K extends keyof T>(
 test("POST /api/v1/auth/register returns 201", async () => {
   const userId = "11111111-1111-1111-1111-111111111111";
   const restoreFns = [
-    stubMethod(authModel, "findUserByEmail", (async () => null) as typeof authModel.findUserByEmail),
+    stubMethod(authModel, "findUserByEmail", async () => null),
     stubMethod(
       authModel,
       "createUser",
-      (async () => ({
+      async () => ({
         id: userId,
         name: "Test Author",
         email: "test.author@example.com",
@@ -34,17 +34,17 @@ test("POST /api/v1/auth/register returns 201", async () => {
         updatedAt: new Date(),
         createdBy: null,
         updatedBy: null,
-      })) as typeof authModel.createUser
+      })
     ),
     stubMethod(
       authModel,
       "setUserSelfAuditFields",
-      (async () => null) as typeof authModel.setUserSelfAuditFields
+      async () => null
     ),
     stubMethod(
       authModel,
       "findUserWithAuditById",
-      (async () => ({
+      async () => ({
         id: userId,
         name: "Test Author",
         email: "test.author@example.com",
@@ -53,7 +53,7 @@ test("POST /api/v1/auth/register returns 201", async () => {
         updatedAt: new Date(),
         createdBy: { id: userId, name: "Test Author", email: "test.author@example.com" },
         updatedBy: { id: userId, name: "Test Author", email: "test.author@example.com" },
-      })) as typeof authModel.findUserWithAuditById
+      })
     ),
   ];
 
@@ -88,7 +88,7 @@ test("POST /api/v1/auth/login returns 200", async () => {
     stubMethod(
       authModel,
       "findUserByEmail",
-      (async () => ({
+      async () => ({
         id: userId,
         name: "Test Author",
         email: "test.author@example.com",
@@ -98,17 +98,17 @@ test("POST /api/v1/auth/login returns 200", async () => {
         updatedAt: new Date(),
         createdBy: userId,
         updatedBy: userId,
-      })) as typeof authModel.findUserByEmail
+      })
     ),
     stubMethod(
       authModel,
       "touchUserAudit",
-      (async () => null) as typeof authModel.touchUserAudit
+      async () => null
     ),
     stubMethod(
       authModel,
       "findUserWithAuditById",
-      (async () => ({
+      async () => ({
         id: userId,
         name: "Test Author",
         email: "test.author@example.com",
@@ -117,7 +117,7 @@ test("POST /api/v1/auth/login returns 200", async () => {
         updatedAt: new Date(),
         createdBy: { id: userId, name: "Test Author", email: "test.author@example.com" },
         updatedBy: { id: userId, name: "Test Author", email: "test.author@example.com" },
-      })) as typeof authModel.findUserWithAuditById
+      })
     ),
   ];
 

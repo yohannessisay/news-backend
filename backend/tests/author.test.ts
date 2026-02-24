@@ -17,10 +17,10 @@ function buildToken(sub: string, role: "author" | "reader", expiresInSeconds = 3
 function stubMethod<T extends object, K extends keyof T>(
   object: T,
   methodName: K,
-  replacement: T[K]
+  replacement: unknown
 ) {
   const original = object[methodName];
-  object[methodName] = replacement;
+  object[methodName] = replacement as T[K];
 
   return () => {
     object[methodName] = original;
@@ -33,19 +33,19 @@ test("GET /api/v1/author/dashboard returns paginated data", async () => {
     stubMethod(
       authorModel,
       "listAuthorDashboardRows",
-      (async () => [
+      async () => [
         {
           id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
           title: "My article",
           createdAt: new Date(),
           totalViews: 9,
         },
-      ]) as typeof authorModel.listAuthorDashboardRows
+      ]
     ),
     stubMethod(
       authorModel,
       "countAuthorDashboardRows",
-      (async () => 1) as typeof authorModel.countAuthorDashboardRows
+      async () => 1
     ),
   ];
 

@@ -18,10 +18,10 @@ function buildToken(sub: string, role: "author" | "reader", expiresInSeconds = 3
 function stubMethod<T extends object, K extends keyof T>(
   object: T,
   methodName: K,
-  replacement: T[K]
+  replacement: unknown
 ) {
   const original = object[methodName];
-  object[methodName] = replacement;
+  object[methodName] = replacement as T[K];
 
   return () => {
     object[methodName] = original;
@@ -36,12 +36,25 @@ test("POST /api/v1/articles returns 201 for author", async () => {
     stubMethod(
       articleModel,
       "createArticle",
-      (async () => ({ id: articleId })) as typeof articleModel.createArticle
+      async () => ({
+        id: articleId,
+        title: "Draft article",
+        content:
+          "This is a test article body that is intentionally longer than fifty characters.",
+        category: "Tech",
+        status: "Draft",
+        authorId,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: authorId,
+        updatedBy: authorId,
+      })
     ),
     stubMethod(
       articleModel,
       "findArticleById",
-      (async () => ({
+      async () => ({
         id: articleId,
         title: "Draft article",
         content:
@@ -53,7 +66,7 @@ test("POST /api/v1/articles returns 201 for author", async () => {
         createdBy: authorId,
         authorName: "Author One",
         deletedAt: null,
-      })) as typeof articleModel.findArticleById
+      })
     ),
   ];
 
@@ -89,7 +102,7 @@ test("GET /api/v1/articles/me returns 200 for author", async () => {
     stubMethod(
       articleModel,
       "listAuthorArticles",
-      (async () => [
+      async () => [
         {
           id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
           title: "My draft",
@@ -98,12 +111,12 @@ test("GET /api/v1/articles/me returns 200 for author", async () => {
           createdAt: new Date(),
           deletedAt: null,
         },
-      ]) as typeof articleModel.listAuthorArticles
+      ]
     ),
     stubMethod(
       articleModel,
       "countAuthorArticles",
-      (async () => 1) as typeof articleModel.countAuthorArticles
+      async () => 1
     ),
   ];
 
@@ -132,7 +145,7 @@ test("PUT /api/v1/articles/:id returns 403 for non-owner", async () => {
   const restore = stubMethod(
     articleModel,
     "findArticleById",
-    (async () => ({
+    async () => ({
       id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
       title: "Other article",
       content:
@@ -144,7 +157,7 @@ test("PUT /api/v1/articles/:id returns 403 for non-owner", async () => {
       createdBy: "22222222-2222-2222-2222-222222222222",
       authorName: "Other Author",
       deletedAt: null,
-    })) as typeof articleModel.findArticleById
+    })
   );
 
   const app = await buildApp();
@@ -174,7 +187,7 @@ test("DELETE /api/v1/articles/:id soft deletes owned article", async () => {
     stubMethod(
       articleModel,
       "findArticleById",
-      (async () => ({
+      async () => ({
         id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
         title: "Owned article",
         content:
@@ -186,15 +199,15 @@ test("DELETE /api/v1/articles/:id soft deletes owned article", async () => {
         createdBy: authorId,
         authorName: "Author One",
         deletedAt: null,
-      })) as typeof articleModel.findArticleById
+      })
     ),
     stubMethod(
       articleModel,
       "softDeleteAuthorArticle",
-      (async () => ({
+      async () => ({
         id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
         deletedAt: new Date(),
-      })) as typeof articleModel.softDeleteAuthorArticle
+      })
     ),
   ];
 
@@ -223,7 +236,7 @@ test("GET /api/v1/articles returns public paginated feed", async () => {
     stubMethod(
       articleModel,
       "listPublicArticles",
-      (async () => [
+      async () => [
         {
           id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
           title: "Published article",
@@ -233,12 +246,12 @@ test("GET /api/v1/articles returns public paginated feed", async () => {
           authorId: "11111111-1111-1111-1111-111111111111",
           authorName: "Author One",
         },
-      ]) as typeof articleModel.listPublicArticles
+      ]
     ),
     stubMethod(
       articleModel,
       "countPublicArticles",
-      (async () => 1) as typeof articleModel.countPublicArticles
+      async () => 1
     ),
   ];
 
@@ -267,7 +280,7 @@ test("GET /api/v1/articles/reader-feed is reader-only", async () => {
     stubMethod(
       articleModel,
       "listPublicArticles",
-      (async () => [
+      async () => [
         {
           id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
           title: "Published article",
@@ -277,12 +290,12 @@ test("GET /api/v1/articles/reader-feed is reader-only", async () => {
           authorId,
           authorName: "Author One",
         },
-      ]) as typeof articleModel.listPublicArticles
+      ]
     ),
     stubMethod(
       articleModel,
       "countPublicArticles",
-      (async () => 1) as typeof articleModel.countPublicArticles
+      async () => 1
     ),
   ];
 
@@ -319,7 +332,7 @@ test("GET /api/v1/articles/:id returns detail", async () => {
     stubMethod(
       articleModel,
       "findArticleById",
-      (async () => ({
+      async () => ({
         id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
         title: "Published article",
         content:
@@ -331,12 +344,12 @@ test("GET /api/v1/articles/:id returns detail", async () => {
         createdBy: "11111111-1111-1111-1111-111111111111",
         authorName: "Author One",
         deletedAt: null,
-      })) as typeof articleModel.findArticleById
+      })
     ),
     stubMethod(
       analyticsModel,
       "createReadLogEvent",
-      (async () => null) as typeof analyticsModel.createReadLogEvent
+      async () => null
     ),
   ];
 

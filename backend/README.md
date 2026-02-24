@@ -119,11 +119,33 @@ Paginated response:
 
 Current implementation records every successful article read event. To prevent refresh abuse in production, add Redis rate-limits and an IP + user fingerprint throttle at the article-read endpoint.
 
+## Testing
+
+Test runner:
+
+- Vitest (`vitest run`)
+
+Test files are split by module:
+
+- `tests/health.test.ts`
+- `tests/auth.test.ts`
+- `tests/articles.test.ts`
+- `tests/author.test.ts`
+- `tests/analytics.test.ts`
+
+How tests work:
+
+- Each test builds a fresh Fastify app and exercises endpoints through `app.inject`.
+- Database-facing model methods are mocked/stubbed at the module object level (`authModel`, `articleModel`, `authorModel`, `analyticsModel`).
+- Tests assert HTTP status and response envelope shape.
+- Vitest config runs files sequentially (`fileParallelism: false`) to avoid shared mock interference.
+
 ## Commands
 
 ```bash
 npm run dev
 npm run typecheck
+npm test
 npm run build
 npm start
 npm run db:generate
