@@ -229,7 +229,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Tech News Headline\",\n  \"content\": \"This is a sample published article body that intentionally exceeds fifty characters.\",\n  \"category\": \"Tech\",\n  \"status\": \"Published\"\n}"
+              "raw": "{\n  \"title\": \"Tech News Headline\",\n  \"content\": \"This is a sample published article body that intentionally exceeds fifty characters.\",\n  \"category\": \"Tech\"\n}"
             },
             "url": "{{baseUrl}}/articles"
           }

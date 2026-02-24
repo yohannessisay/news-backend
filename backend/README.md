@@ -109,6 +109,10 @@ Paginated response:
 - User data is stored in `security.users`.
 - Shared audit columns (`created_at`, `updated_at`, `created_by`, `updated_by`) are centralized in `shared/db/audit-columns.ts`.
 - Read tracking is non-blocking and queued for analytics aggregation.
+- New articles are always created with status `Draft`.
+- Status transitions: `Draft -> Published`, `Draft -> Archived`, `Published -> Archived`, `Archived -> Published`.
+- Article content fields (`title`, `content`, `category`) are editable only while the article is in `Draft`.
+- Article update/delete ownership is enforced by matching JWT user id with article `createdBy`.
 
 ## Refresh Abuse Control
 
