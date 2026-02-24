@@ -128,3 +128,11 @@ export async function touchUserAudit(userId: string, actorId: string) {
 
   return result[0] ?? null;
 }
+
+export const authModel = {
+  findUserByEmail,
+  findUserWithAuditById,
+  createUser,
+  setUserSelfAuditFields,
+  touchUserAudit,
+};

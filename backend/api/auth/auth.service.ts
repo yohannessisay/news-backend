@@ -1,11 +1,5 @@
 import { AppError } from "../../shared/types/app-error";
-import {
-  createUser,
-  findUserByEmail,
-  findUserWithAuditById,
-  setUserSelfAuditFields,
-  touchUserAudit,
-} from "./auth.model";
+import { authModel } from "./auth.model";
 import {
   LoginRequest,
   LoginResponseData,
@@ -34,7 +28,7 @@ export class AuthService {
       });
     }
 
-    const existingUser = await findUserByEmail(email);
+    const existingUser = await authModel.findUserByEmail(email);
     if (existingUser) {
       throw new AppError({
         statusCode: 409,
@@ -45,14 +39,14 @@ export class AuthService {
     const password = await createPasswordHash(payload.password);
 
     try {
-      const insertedUser = await createUser({
+      const insertedUser = await authModel.createUser({
         name,
         email,
         password,
         role,
       });
-      await setUserSelfAuditFields(insertedUser.id);
-      const user = await findUserWithAuditById(insertedUser.id);
+      await authModel.setUserSelfAuditFields(insertedUser.id);
+      const user = await authModel.findUserWithAuditById(insertedUser.id);
       if (!user) {
         throw new AppError({
           statusCode: 500,
@@ -92,7 +86,7 @@ export class AuthService {
 
   async login(payload: LoginRequest): Promise<LoginResponseData> {
     const email = normalizeEmail(payload.email);
-    const user = await findUserByEmail(email);
+    const user = await authModel.findUserByEmail(email);
 
     if (!user) {
       throw new AppError({
@@ -109,8 +103,8 @@ export class AuthService {
       });
     }
 
-    await touchUserAudit(user.id, user.id);
-    const authUser = await findUserWithAuditById(user.id);
+    await authModel.touchUserAudit(user.id, user.id);
+    const authUser = await authModel.findUserWithAuditById(user.id);
     if (!authUser) {
       throw new AppError({
         statusCode: 500,

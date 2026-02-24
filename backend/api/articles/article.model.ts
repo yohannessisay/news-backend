@@ -243,3 +243,14 @@ export async function countAuthorArticles(authorId: string, includeDeleted: bool
 
   return Number(result[0]?.total ?? 0);
 }
+
+export const articleModel = {
+  createArticle,
+  findArticleById,
+  updateAuthorArticle,
+  softDeleteAuthorArticle,
+  listPublicArticles,
+  countPublicArticles,
+  listAuthorArticles,
+  countAuthorArticles,
+};

@@ -36,6 +36,10 @@ const authorOnlyPreHandlers = [
   requireAuthPreHandler,
   requireRolePreHandler(["author"]),
 ];
+const readerOnlyPreHandlers = [
+  requireAuthPreHandler,
+  requireRolePreHandler(["reader"]),
+];
 
 const articleRoutes: FastifyPluginAsyncTypebox = async (app) => {
   app.post<{ Body: CreateArticleBody }>(
@@ -134,6 +138,26 @@ const articleRoutes: FastifyPluginAsyncTypebox = async (app) => {
         querystring: ArticleListQuerySchema,
         response: {
           200: PublicArticleListResponseSchema,
+          500: ArticleErrorResponseSchema,
+        },
+      },
+    },
+    listPublicArticlesController
+  );
+
+  app.get<{ Querystring: ArticleListQuery }>(
+    "/articles/reader-feed",
+    {
+      preHandler: readerOnlyPreHandlers,
+      schema: {
+        tags: ["Articles"],
+        summary: "Get published public article feed (reader only)",
+        security: [{ BearerAuth: [] }],
+        querystring: ArticleListQuerySchema,
+        response: {
+          200: PublicArticleListResponseSchema,
+          401: ArticleErrorResponseSchema,
+          403: ArticleErrorResponseSchema,
           500: ArticleErrorResponseSchema,
         },
       },

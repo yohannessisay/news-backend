@@ -2,16 +2,7 @@ import { AppError } from "../../shared/types/app-error";
 import { AuthenticatedUser } from "../../shared/auth/auth.type";
 import { normalizeOptionalString, parsePagination } from "../../shared/utils/query";
 import { trackReadInBackground } from "../analytics/analytics.service";
-import {
-  countAuthorArticles,
-  countPublicArticles,
-  createArticle,
-  findArticleById,
-  listAuthorArticles,
-  listPublicArticles,
-  softDeleteAuthorArticle,
-  updateAuthorArticle,
-} from "./article.model";
+import { articleModel } from "./article.model";
 import {
   ArticleListQuery,
   ArticleStatus,
@@ -46,7 +37,7 @@ function canTransitionStatus(from: ArticleStatus, to: ArticleStatus) {
 
 export class ArticleService {
   async create(author: AuthenticatedUser, body: CreateArticleBody) {
-    const article = await createArticle({
+    const article = await articleModel.createArticle({
       body,
       authorId: author.id,
     });
@@ -58,7 +49,7 @@ export class ArticleService {
       });
     }
 
-    const fullArticle = await findArticleById(article.id);
+    const fullArticle = await articleModel.findArticleById(article.id);
     if (!fullArticle) {
       throw new AppError({
         statusCode: 500,
@@ -83,13 +74,13 @@ export class ArticleService {
     const pagination = parsePagination(query);
 
     const [rows, totalSize] = await Promise.all([
-      listAuthorArticles({
+      articleModel.listAuthorArticles({
         authorId: author.id,
         includeDeleted,
         pageSize: pagination.pageSize,
         offset: pagination.offset,
       }),
-      countAuthorArticles(author.id, includeDeleted),
+      articleModel.countAuthorArticles(author.id, includeDeleted),
     ]);
 
     return {
@@ -120,7 +111,7 @@ export class ArticleService {
       });
     }
 
-    const existingArticle = await findArticleById(articleId);
+    const existingArticle = await articleModel.findArticleById(articleId);
     if (!existingArticle) {
       throw new AppError({
         statusCode: 404,
@@ -162,7 +153,7 @@ export class ArticleService {
       });
     }
 
-    const updatedArticle = await updateAuthorArticle({
+    const updatedArticle = await articleModel.updateAuthorArticle({
       id: articleId,
       authorId: author.id,
       body,
@@ -174,7 +165,7 @@ export class ArticleService {
       });
     }
 
-    const article = await findArticleById(updatedArticle.id);
+    const article = await articleModel.findArticleById(updatedArticle.id);
     if (!article) {
       throw new AppError({
         statusCode: 500,
@@ -195,7 +186,7 @@ export class ArticleService {
   }
 
   async softDelete(author: AuthenticatedUser, articleId: string) {
-    const existingArticle = await findArticleById(articleId);
+    const existingArticle = await articleModel.findArticleById(articleId);
     if (!existingArticle) {
       throw new AppError({
         statusCode: 404,
@@ -215,7 +206,7 @@ export class ArticleService {
       });
     }
 
-    const deleted = await softDeleteAuthorArticle(articleId, author.id);
+    const deleted = await articleModel.softDeleteAuthorArticle(articleId, author.id);
     if (!deleted || !deleted.deletedAt) {
       throw new AppError({
         statusCode: 500,
@@ -238,12 +229,12 @@ export class ArticleService {
     };
 
     const [rows, totalSize] = await Promise.all([
-      listPublicArticles({
+      articleModel.listPublicArticles({
         filters,
         pageSize: pagination.pageSize,
         offset: pagination.offset,
       }),
-      countPublicArticles(filters),
+      articleModel.countPublicArticles(filters),
     ]);
 
     return {
@@ -263,7 +254,7 @@ export class ArticleService {
   }
 
   async getById(articleId: string, reader: AuthenticatedUser | null) {
-    const article = await findArticleById(articleId);
+    const article = await articleModel.findArticleById(articleId);
 
     if (!article) {
       throw new AppError({

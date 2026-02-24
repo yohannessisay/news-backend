@@ -33,3 +33,8 @@ export async function countAuthorDashboardRows(authorId: string) {
 
   return Number(result[0]?.total ?? 0);
 }
+
+export const authorModel = {
+  listAuthorDashboardRows,
+  countAuthorDashboardRows,
+};

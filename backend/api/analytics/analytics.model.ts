@@ -24,27 +24,6 @@ export async function createReadLogEvent(input: {
   articleId: string;
   readerId: string | null;
 }) {
-  if (input.readerId) {
-    const threshold = new Date(Date.now() - 10_000);
-    const latestReaderLog = await db
-      .select({
-        id: readLogs.id,
-      })
-      .from(readLogs)
-      .where(
-        and(
-          eq(readLogs.articleId, input.articleId),
-          eq(readLogs.readerId, input.readerId),
-          gte(readLogs.readAt, threshold)
-        )
-      )
-      .limit(1);
-
-    if (latestReaderLog[0]) {
-      return null;
-    }
-  }
-
   const now = new Date();
   const result = await db
     .insert(readLogs)
@@ -121,3 +100,11 @@ export async function upsertDailyAnalyticsRow(input: {
       },
     });
 }
+
+export const analyticsModel = {
+  createReadLogEvent,
+  listArticleIdsForDate,
+  countArticleReadsForDate,
+  upsertDailyAnalyticsRow,
+  toUtcDateString,
+};

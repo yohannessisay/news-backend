@@ -12,6 +12,7 @@ Fastify + TypeScript backend with module-first structure (`api/<module>`) and sh
 - `PUT /api/v1/articles/:id` (author only, own article only)
 - `DELETE /api/v1/articles/:id` (author only, soft delete)
 - `GET /api/v1/articles` (public, published + non-deleted only, paginated)
+- `GET /api/v1/articles/reader-feed` (reader only, published + non-deleted, paginated)
 - `GET /api/v1/articles/:id` (public/optional auth, read tracking)
 - `GET /api/v1/author/dashboard` (author only, paginated views)
 - `POST /api/v1/analytics/process` (author only, enqueue daily aggregation)
@@ -116,7 +117,7 @@ Paginated response:
 
 ## Refresh Abuse Control
 
-To prevent one user from generating 100 reads in seconds, current logic applies a 10-second dedupe window per `(articleId, readerId)`. For stricter control in production, add Redis rate-limits and an IP + user fingerprint throttle at the article-read endpoint.
+Current implementation records every successful article read event. To prevent refresh abuse in production, add Redis rate-limits and an IP + user fingerprint throttle at the article-read endpoint.
 
 ## Commands
 

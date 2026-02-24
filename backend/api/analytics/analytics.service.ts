@@ -1,10 +1,4 @@
-import {
-  countArticleReadsForDate,
-  createReadLogEvent,
-  listArticleIdsForDate,
-  toUtcDateString,
-  upsertDailyAnalyticsRow,
-} from "./analytics.model";
+import { analyticsModel } from "./analytics.model";
 
 type AnalyticsJob = {
   articleId: string;
@@ -36,8 +30,11 @@ async function processQueue() {
     pendingKeys.delete(key);
 
     try {
-      const viewCount = await countArticleReadsForDate(job.articleId, job.date);
-      await upsertDailyAnalyticsRow({
+      const viewCount = await analyticsModel.countArticleReadsForDate(
+        job.articleId,
+        job.date
+      );
+      await analyticsModel.upsertDailyAnalyticsRow({
         articleId: job.articleId,
         date: job.date,
         viewCount,
@@ -62,7 +59,7 @@ export function enqueueAnalyticsJob(job: AnalyticsJob) {
 }
 
 export function getCurrentUtcDateString() {
-  return toUtcDateString(new Date());
+  return analyticsModel.toUtcDateString(new Date());
 }
 
 export function trackReadInBackground(input: {
@@ -71,7 +68,7 @@ export function trackReadInBackground(input: {
 }) {
   void (async () => {
     try {
-      const readLog = await createReadLogEvent({
+      const readLog = await analyticsModel.createReadLogEvent({
         articleId: input.articleId,
         readerId: input.readerId,
       });
@@ -82,7 +79,7 @@ export function trackReadInBackground(input: {
 
       enqueueAnalyticsJob({
         articleId: readLog.articleId,
-        date: toUtcDateString(readLog.readAt),
+        date: analyticsModel.toUtcDateString(readLog.readAt),
       });
     } catch (error) {
       console.error("read_tracking_failed", error);
@@ -92,7 +89,7 @@ export function trackReadInBackground(input: {
 
 export class AnalyticsService {
   async enqueueDailyAggregation(date: string) {
-    const articleIds = await listArticleIdsForDate(date);
+    const articleIds = await analyticsModel.listArticleIdsForDate(date);
 
     for (const articleId of articleIds) {
       enqueueAnalyticsJob({

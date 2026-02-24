@@ -1,9 +1,6 @@
 import { AuthenticatedUser } from "../../shared/auth/auth.type";
 import { parsePagination } from "../../shared/utils/query";
-import {
-  countAuthorDashboardRows,
-  listAuthorDashboardRows,
-} from "./author.model";
+import { authorModel } from "./author.model";
 import { AuthorDashboardQuery } from "./author.type";
 
 export class AuthorService {
@@ -11,12 +8,12 @@ export class AuthorService {
     const pagination = parsePagination(query);
 
     const [rows, totalSize] = await Promise.all([
-      listAuthorDashboardRows({
+      authorModel.listAuthorDashboardRows({
         authorId: author.id,
         pageSize: pagination.pageSize,
         offset: pagination.offset,
       }),
-      countAuthorDashboardRows(author.id),
+      authorModel.countAuthorDashboardRows(author.id),
     ]);
 
     return {
